@@ -23,13 +23,15 @@ let in_bounds g r k =
   r >= 0 && r < rows && k >= 0 && k < cols
 
 let neighbors g r k =
-  let canditates = [
+  let candidates = [
     (r - 1, k - 1); (r - 1, k); (r - 1, k + 1);
     (r, k - 1);                 (r, k + 1);
     (r + 1, k - 1); (r + 1, k); (r + 1, k + 1)
   ] in
 
-  List.filter (fun (r, k) -> in_bounds g r k) canditates
+  candidates
+  |> List.filter (fun (r, k) -> in_bounds g r k)
+  |> List.map (fun (r, k) -> g.(r).(k))
 
 let draw ?(unicode=true) (g : grid) =
   let sym = function
@@ -46,6 +48,9 @@ let () =
   draw g;
   print_newline ();
 
-  let g = with_off_positions g [(0, 0); (1, 1); (2, 2); (3, 3); (4, 4);] in
+  let diag = List.init 5 (fun i -> (i, i)) in
+
+  let g = with_off_positions g diag in
   draw g;
 
+  List.iter (fun pos -> List.length (neighbors g (fst pos) (snd pos)) |> Printf.printf "Len of neighbors of (%d,%d): %d\n" (fst pos) (snd pos)) diag
