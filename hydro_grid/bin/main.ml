@@ -103,17 +103,39 @@ let draw ?(unicode=true) (g : grid) =
   Array.iter (fun row ->
     Array.iter (fun n -> print_string (sym n ^ "")) row;
     print_newline ()
-  ) g
+  ) g;
+  print_newline ()
+
+let step (g : grid) : grid =
+  Array.map (Array.map (fun n -> match n.status with
+    | On -> init_node ~status:Off ()
+    | Off -> init_node ~status:On ()
+    )) g
+
+let run (g : grid) (steps : int) (step : grid -> grid) : unit =
+  let rec aux g n =
+    if n <= 0 
+      then () 
+      else 
+        let g = step g in
+        draw g;
+        aux (step g) (n - 1)
+  in
+  aux g steps
 
 let () =
   let g = init_grid 5 5 ~status:On in
   draw g;
-  print_newline ();
+
   let diag = List.init 5 (fun i -> (i, i)) in
   let g = with_off_positions g diag in
   draw g;
+  (*
   List.iter
     (fun (r,c) ->
        let len = List.length (neighbors g r c) in
        Printf.printf "Len of neighbors of (%d,%d): %d\n" r c len)
     diag
+  *)
+  
+  run g 4 step
