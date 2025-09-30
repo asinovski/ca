@@ -1,4 +1,4 @@
 (executable
  (public_name hydro_grid)
  (name main)
- (libraries hydro_grid))
+ (libraries unix hydro_grid))
