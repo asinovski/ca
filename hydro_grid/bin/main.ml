@@ -86,6 +86,9 @@ let neighbors g r k =
   |> List.filter (fun (r, k) -> in_bounds g r k)
   |> List.map (fun (r, k) -> g.(r).(k))
 
+let clear () =
+  print_string "\027[2J\027[H"
+
 (** [draw ?unicode g] prints [g] to stdout as a compact grid.
 
     When [unicode] is [true] (default), online cells are rendered as ["🌀"]
@@ -95,7 +98,9 @@ let neighbors g r k =
     @param unicode toggle Unicode vs ASCII glyphs
     @param g grid to render
     @return unit (prints to stdout) *)
-let draw ?(unicode=true) (g : grid) =
+let draw ?(unicode=true) ?(sleep_time=1.0) (g : grid) (t : int) =
+  clear ();
+  Printf.printf "Time: %d\n\n" t;
   let sym = function
     | {status=On; _}  -> if unicode then "🌀" else "T"
     | {status=Off; _} -> if unicode then "❌" else "X"
@@ -104,7 +109,10 @@ let draw ?(unicode=true) (g : grid) =
     Array.iter (fun n -> print_string (sym n ^ "")) row;
     print_newline ()
   ) g;
-  print_newline ()
+  print_newline ();
+  flush stdout;
+  Unix.sleepf sleep_time
+
 
 let step (g : grid) : grid =
   Array.map (Array.map (fun n -> match n.status with
@@ -114,22 +122,18 @@ let step (g : grid) : grid =
 
 let run (g : grid) (steps : int) (step : grid -> grid) : unit =
   let rec aux g n =
-    if n <= 0 
-      then () 
-      else 
-        let g = step g in
-        draw g;
-        aux (step g) (n - 1)
+    if n > steps then () 
+    else (
+      draw g n;
+      aux (step g) (n + 1)
+    )
   in
-  aux g steps
+  aux g 0
 
 let () =
   let g = init_grid 5 5 ~status:On in
-  draw g;
-
   let diag = List.init 5 (fun i -> (i, i)) in
   let g = with_off_positions g diag in
-  draw g;
   (*
   List.iter
     (fun (r,c) ->
